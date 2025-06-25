@@ -7,18 +7,18 @@ import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
 interface Feedback {
-  createdAt?: Date;
+  createdAt?: string;
   totalScore?: number;
   finalAssessment?: string;
 }
 
 interface InterviewCardProps {
-  interviewId: string;
-  userId: string;
+  interviewId?: string;
+  userId?: string;
   role: string;
   type: string;
   techstack?: string[];
-  createdAt?: Date;
+  createdAt?: string;
 }
 
 const InterviewCard = ({
@@ -39,7 +39,7 @@ const InterviewCard = ({
     }[normalizedType] || "bg-light-600";
 
   const formattedDate = dayjs(
-    feedback?.createdAt || createdAt || Date.now()
+    feedback?.createdAt || createdAt || Date.now().toString()
   ).format("MMM DD, YYYY");
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96">
