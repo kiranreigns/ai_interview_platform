@@ -1,28 +1,24 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { dummyInterviews } from "@/constants";
 import InterviewCard from "@/components/InterviewCard";
+import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
   getInterviewsByUserId,
-  getCurrentUser,
   getLatestInterviews,
-} from "@/lib/actions/auth.action";
+} from "@/lib/actions/general.action";
 
 const Homepage = async () => {
   const user = await getCurrentUser();
 
   // Parallelize API calls
-  const [userInterviews, LatestInterviews] = await Promise.all([
+  const [userInterviews, latestInterviews] = await Promise.all([
     getInterviewsByUserId(user?.id!),
     getLatestInterviews({ userId: user?.id! }),
   ]);
 
-  // const userInterviews = await getInterviewsByUserId(user?.id!);
-  // const latestInterviews = await getLatestInterviews({ userId: user?.id! });
-
   const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = LatestInterviews?.length > 0;
+  const hasUpcomingInterviews = latestInterviews?.length > 0;
 
   return (
     <>
@@ -63,7 +59,7 @@ const Homepage = async () => {
         <h2>Take an Interview</h2>
         <div className="interviews-section">
           {hasUpcomingInterviews ? (
-            LatestInterviews?.map((interview) => (
+            latestInterviews?.map((interview) => (
               <InterviewCard {...interview} key={interview.id} />
             ))
           ) : (
