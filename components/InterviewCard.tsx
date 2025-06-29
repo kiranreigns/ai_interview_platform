@@ -1,35 +1,25 @@
-import React from "react";
 import dayjs from "dayjs";
-import { cn, getRandomInterviewCover } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
+
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
-interface Feedback {
-  createdAt?: string;
-  totalScore?: number;
-  finalAssessment?: string;
-}
+import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 
-interface InterviewCardProps {
-  id?: string;
-  userId?: string;
-  role: string;
-  type: string;
-  techstack?: string[];
-  createdAt?: string;
-}
-
-const InterviewCard = ({
-  id,
+const InterviewCard = async ({
+  interviewId,
   userId,
   role,
   type,
   techstack,
   createdAt,
 }: InterviewCardProps) => {
-  const feedback = null as Feedback | null;
+  const feedback =
+    userId && interviewId
+      ? await getFeedbackByInterviewId({ interviewId, userId })
+      : null;
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
   const badgeColor =
     {
@@ -41,6 +31,7 @@ const InterviewCard = ({
   const formattedDate = dayjs(
     feedback?.createdAt || createdAt || Date.now().toString()
   ).format("MMM DD, YYYY");
+
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96">
       <div className="card-interview">
@@ -97,9 +88,13 @@ const InterviewCard = ({
 
           <Button className="btn-primary">
             <Link
-              href={feedback ? `/interview/${id}/feedback` : `/interview/${id}`}
+              href={
+                feedback
+                  ? `/interview/${interviewId}/feedback`
+                  : `/interview/${interviewId}`
+              }
             >
-              {feedback ? "View Feedback" : "View Interview"}
+              {feedback ? "View Feedback" : "Take Interview"}
             </Link>
           </Button>
         </div>

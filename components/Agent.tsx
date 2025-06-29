@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 import { vapi } from "../lib/vapi.sdk";
 import { interviewer } from "@/constants";
+import { createFeedback } from "@/lib/actions/general.action";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -24,12 +26,15 @@ const Agent = ({
   userId,
   type,
   interviewId,
+  feedbackId,
   questions,
+  userProfileURL,
 }: AgentProps) => {
   const router = useRouter();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const [latestMessage, setLatestMessage] = useState<string>("");
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -67,14 +72,21 @@ const Agent = ({
     };
   }, []);
 
-  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-    console.log("Generate feedback here");
+  useEffect(() => {
+    if (messages.length > 0) {
+      setLatestMessage(messages[messages.length - 1].content);
+    }
+  }, [messages]);
 
-    // TODO: Create a server action that generates feedback
-    const { success, id } = {
-      success: true,
-      id: "feedback-id",
-    };
+  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+    console.log("handleGenerateFeedback");
+
+    const { success, feedbackId: id } = await createFeedback({
+      interviewId: interviewId!,
+      userId: userId!,
+      feedbackId,
+      transcript: messages,
+    });
 
     if (success && id) {
       router.push(`/interview/${interviewId}/feedback`);
@@ -92,7 +104,7 @@ const Agent = ({
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, type, userId, interviewId]);
+  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -126,12 +138,12 @@ const Agent = ({
     }
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);
-    await vapi.stop();
+    vapi.stop();
   };
 
-  const latestMessage = messages[messages.length - 1]?.content;
+  // const latestMessage = messages[messages.length - 1]?.content;
   const isCallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
@@ -141,11 +153,11 @@ const Agent = ({
         <div className="card-interviewer">
           <div className="avatar">
             <Image
-              src="/ai-avatar.png"
+              src="/ai-avatar2.jpeg"
               alt="AI Avatar"
-              width={65}
-              height={54}
-              className="object-cover"
+              width={540}
+              height={540}
+              className=" object-cover rounded-full"
             />
             {isSpeaking && <span className="animate-speak"></span>}
           </div>
@@ -155,11 +167,11 @@ const Agent = ({
         <div className="card-border">
           <div className="card-content">
             <Image
-              src="/user-avatar.png"
+              src={userProfileURL || "/user-avatar2.png"}
               alt="User Avatar"
               width={540}
               height={540}
-              className="rounded-full object-cover size-[120px]"
+              className="rounded-full object-cover size-[140px]"
             />
             <h3>{userName}</h3>
           </div>
